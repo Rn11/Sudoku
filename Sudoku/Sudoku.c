@@ -18,32 +18,67 @@ const char colIndexLabel[9] = { 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I' };
 const char rowIndexLabel[9] = { '1', '2', '3', '4', '5', '6', '7', '8', '9' };
 
 const char* fillGameboard() {
-	static char gameBoard[9][9]; // we need a static value here since we can't return an array in C, see https://www.tutorialspoint.com/cprogramming/c_return_arrays_from_function.htm
+	// we need a static value here since we can't return an array in C, see https://www.tutorialspoint.com/cprogramming/c_return_arrays_from_function.htm
+	
+	// we'll start with a valid sudoku board
+	static char gameBoard[9][9] =
+	{
+		{ '1','2','3','4','5','6','7','8','9' },
+		{ '4','5','6','7','8','9','1','2','3' },
+		{ '7','8','9','1','2','3','4','5','6' },
+		{ '2','3','1','5','6','4','8','9','7' },
+		{ '5','6','4','8','9','7','2','3','1' },
+		{ '8','9','7','2','3','1','5','6','4' },
+		{ '3','1','2','6','4','5','9','7','8' },
+		{ '6','4','5','9','7','8','3','1','2' },
+		{ '9','7','8','3','1','2','6','4','5' },
+	};
 
-	// TODO: replace code below with new generation algo that generates complete board and then removes cells
+	/** note that the game board array does NOT reset as it's static.
+	Running this method more than once will ultimately result in a full grid.
+	It will only replace values of grid fields. To empty grid / gameBoard, iterate all fields (rows + cols)
+	and assign '\0' !
+	*/
 
-	// FIXED: using char array for game board instead of int array, had to restructure code and add pointers to achieve that :)
-	// note that empty values are now stored as '\0' instead of 0 as int
+	int seed = rand() % 333 + 1 + '0';
+	// run this loop 100 times and call methods to randomize game board (swapping, permutation)
+	for (int y = 0; y < 100; y++) {
+			// calculate a new value to re-seed
+			seed = (seed % 101) + (((y*y) * y) * 3) - (rand() % 35 + 1 + '0');
 
-	// outer loop for columns
-	for (int y = 0; y < 9; y++) {
-		// outer loop for rows
-		for (int x = 0; x < 9; x++) {
-			// to simulate partially empty field, skip adding values sometimes
-
-			/** note that the game board array does NOT reset as it's static.
-				Running this method more than once will ultimately result in a full grid.
-				It will only replace values of grid fields. To empty grid / gameBoard, iterate all fields (rows + cols)
-				and assign '\0' !
-			*/
-			if ((rand() % 2)) {
-				gameBoard[y][x] = ((rand() % 9) + 1) + '0'; // Assign random value between 1-9
-			}
+			// calling permutation method to swap values
+			permutateNumbers(gameBoard, seed);
 		}
-	}
 	return gameBoard;
 }
 
+/**
+Permutates 2 numbers within the game board array
+@param static game board generated for each session
+@param specifies the input used to get a new seed
+*/
+int permutateNumbers(char gameBoard[9][9], int seed) {
+	//re-seed random
+	srand(seed);
+
+	// get two that will be swapped within the array
+	char firstReplacementValue = (rand() % 9 + 1) + '0';
+	char secondReplacementValue = (rand() % 9 + 1) + '0';
+
+	// iterate all cells of array and swap values
+	for (int x = 0; x < 9; x++) {
+		for (int y = 0; y < 9; y++) {
+			// if value is equal to our first value, change it to the second value
+			if (gameBoard[x][y] == firstReplacementValue) {
+				gameBoard[x][y] = secondReplacementValue;
+			}
+			// if the current value is equal to our second value already, make it the first value instead
+			else if (gameBoard[x][y] == secondReplacementValue) {
+				gameBoard[x][y] = firstReplacementValue;
+			}
+		}
+	}
+}
 
 void printBoard(char gameBoard[9][9]) {
 	// print column index label first
@@ -302,8 +337,8 @@ int main()
 
 		// testing if game logic method works, seems to work but needs changes to our use-case
 		isDuplicateVertically(gameBoard, 0);
-		
-		
+
+
 		// ask user if he wants to play again
 		wprintf(L"\n\nNeue Runde? (y/n)\n");
 		char input; // TODO: move this to the beginning of the code and rename(?)
